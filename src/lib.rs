@@ -9,6 +9,7 @@ use utils::fe_to_biguint;
 
 pub mod gates;
 pub mod utils;
+pub mod poseidon;
 
 #[derive(Clone, Debug)]
 pub enum QuantumCell<'a, F: FieldExt> {
