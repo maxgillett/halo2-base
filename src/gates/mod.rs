@@ -77,10 +77,18 @@ pub trait GateInstructions<F: FieldExt> {
         a: &QuantumCell<F>,
         b: &QuantumCell<F>,
     ) -> Result<AssignedValue<F>, Error> {
-        let c = a.value().zip(b.value()).map(|(&a, b)| a * b.invert().unwrap());
+        let c = a
+            .value()
+            .zip(b.value())
+            .map(|(&a, b)| a * b.invert().unwrap());
         let assignments = self.assign_region_smart(
             ctx,
-            vec![QuantumCell::Constant(F::from(0)), QuantumCell::Witness(c), b.clone(), a.clone()],
+            vec![
+                QuantumCell::Constant(F::from(0)),
+                QuantumCell::Witness(c),
+                b.clone(),
+                a.clone(),
+            ],
             vec![0],
             vec![],
             vec![],
@@ -105,7 +113,11 @@ pub trait GateInstructions<F: FieldExt> {
         vec_a: &Vec<QuantumCell<F>>,
         vec_b: &Vec<QuantumCell<F>>,
     ) -> Result<
-        (Option<Vec<AssignedValue<F>>>, Option<Vec<AssignedValue<F>>>, AssignedValue<F>),
+        (
+            Option<Vec<AssignedValue<F>>>,
+            Option<Vec<AssignedValue<F>>>,
+            AssignedValue<F>,
+        ),
         Error,
     >;
 
@@ -191,6 +203,26 @@ pub trait GateInstructions<F: FieldExt> {
         )?;
         Ok(res)
     }
+
+    fn pow(
+        &self,
+        ctx: &mut Context<'_, F>,
+        a: &QuantumCell<F>,
+        b: usize,
+    ) -> Result<AssignedValue<F>, Error>;
+
+    fn pow_bits(
+        &self,
+        ctx: &mut Context<'_, F>,
+        a: F,
+        b: &Vec<QuantumCell<F>>,
+    ) -> Result<AssignedValue<F>, Error>;
+
+    fn invert(
+        &self,
+        ctx: &mut Context<'_, F>,
+        a: &QuantumCell<F>,
+    ) -> Result<AssignedValue<F>, Error>;
 }
 
 pub trait RangeInstructions<F: FieldExt> {
