@@ -930,4 +930,62 @@ impl<F: FieldExt> GateInstructions<F> for FlexGateConfig<F> {
         }
         Ok(ind)
     }
+
+    fn pow(
+        &self,
+        ctx: &mut Context<'_, F>,
+        a: &QuantumCell<F>,
+        b: usize,
+    ) -> Result<AssignedValue<F>, Error> {
+        let mut product = self.assign_region(ctx, vec![a.clone()], vec![], None)?[0].clone();
+        for _ in 0..b {
+            product = self.mul(ctx, &Existing(&product), &Existing(&product))?;
+        }
+        Ok(product)
+    }
+
+    fn pow_bits(
+        &self,
+        ctx: &mut Context<'_, F>,
+        base: F,
+        bits: &Vec<QuantumCell<F>>,
+    ) -> Result<AssignedValue<F>, Error> {
+        let mut product =
+            self.assign_region(ctx, vec![Constant(F::from(1))], vec![], None)?[0].clone();
+        for (i, bit) in bits.iter().enumerate() {
+            product = self.mul_add(
+                ctx,
+                &Existing(&product),
+                &bit,
+                &Constant(F::from(base.pow_vartime(&[1 << i]))),
+            )?;
+        }
+        Ok(product)
+    }
+
+    fn invert(
+        &self,
+        ctx: &mut Context<'_, F>,
+        a: &QuantumCell<F>,
+    ) -> Result<AssignedValue<F>, Error> {
+        let zero = F::zero();
+        let one = F::one();
+        let b = a.value().map(|x| x.invert().unwrap_or(zero));
+        let c = a.value().zip(b).map(|(av, bv)| one - *av * bv);
+        // constrain a * c == 0
+        let cells: Vec<QuantumCell<F>> = vec![
+            Constant(F::from(0)),
+            a.clone(),
+            Witness(c.clone()),
+            Constant(F::from(0)),
+        ];
+        let assigned_cells = self.assign_region_smart(ctx, cells, vec![0], vec![], vec![])?;
+        let c = &assigned_cells[2];
+        // constrain a * b + c == 1
+        let cells: Vec<QuantumCell<F>> =
+            vec![Existing(c), a.clone(), Witness(b.clone()), Constant(one)];
+        let assigned_cells = self.assign_region_smart(ctx, cells, vec![0], vec![], vec![])?;
+        let inv = assigned_cells[2].clone();
+        Ok(inv)
+    }
 }
