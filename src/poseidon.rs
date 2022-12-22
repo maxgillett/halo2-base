@@ -66,8 +66,12 @@ impl<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize>
             &vec![Constant(F::one()); inputs.len() + 1],
         )?;
 
-        for ((x, constant), input) in
-            self.s.iter_mut().skip(1).zip(pre_constants.iter().skip(1)).zip(inputs.iter())
+        for ((x, constant), input) in self
+            .s
+            .iter_mut()
+            .skip(1)
+            .zip(pre_constants.iter().skip(1))
+            .zip(inputs.iter())
         {
             *x = if *constant == F::zero() {
                 chip.add(ctx, &Existing(x), &Existing(input))?
@@ -81,13 +85,21 @@ impl<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize>
             };
         }
 
-        for (i, (x, constant)) in
-            self.s.iter_mut().skip(offset).zip(pre_constants.iter().skip(offset)).enumerate()
+        for (i, (x, constant)) in self
+            .s
+            .iter_mut()
+            .skip(offset)
+            .zip(pre_constants.iter().skip(offset))
+            .enumerate()
         {
             *x = chip.add(
                 ctx,
                 &Existing(x),
-                &Constant(if i == 0 { *constant + F::one() } else { *constant }),
+                &Constant(if i == 0 {
+                    *constant + F::one()
+                } else {
+                    *constant
+                }),
             )?;
         }
 
@@ -156,18 +168,29 @@ impl<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize>
         let init_state = State::<F, T>::default()
             .words()
             .into_iter()
-            .map(|x| Ok(chip.assign_region(ctx, vec![Constant(x)], vec![], None)?.pop().unwrap()))
+            .map(|x| {
+                Ok(chip
+                    .assign_region(ctx, vec![Constant(x)], vec![], None)?
+                    .pop()
+                    .unwrap())
+            })
             .collect::<Result<Vec<AssignedValue<F>>, Error>>()?;
         Ok(Self {
             spec: Spec::new(r_f, r_p),
             init_state: init_state.clone().try_into().unwrap(),
-            state: PoseidonState { s: init_state.try_into().unwrap(), _marker: PhantomData },
+            state: PoseidonState {
+                s: init_state.try_into().unwrap(),
+                _marker: PhantomData,
+            },
             absorbing: Vec::new(),
         })
     }
 
     pub fn clear(&mut self) {
-        self.state = PoseidonState { s: self.init_state.clone(), _marker: PhantomData };
+        self.state = PoseidonState {
+            s: self.init_state.clone(),
+            _marker: PhantomData,
+        };
         self.absorbing.clear();
     }
 
@@ -207,7 +230,8 @@ impl<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize>
         let mds = &self.spec.mds_matrices().mds().rows();
 
         let constants = &self.spec.constants().start();
-        self.state.absorb_with_pre_constants(ctx, chip, inputs, &constants[0])?;
+        self.state
+            .absorb_with_pre_constants(ctx, chip, inputs, &constants[0])?;
         for constants in constants.iter().skip(1).take(r_f - 1) {
             self.state.sbox_full(ctx, chip, constants)?;
             self.state.apply_mds(ctx, chip, mds)?;
