@@ -8,8 +8,8 @@ use std::{borrow::Borrow, collections::HashMap, rc::Rc};
 use utils::fe_to_biguint;
 
 pub mod gates;
-pub mod utils;
 pub mod poseidon;
+pub mod utils;
 
 #[derive(Clone, Debug)]
 pub enum QuantumCell<'a, F: FieldExt> {
