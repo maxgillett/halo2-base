@@ -57,50 +57,16 @@ impl<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize>
         assert!(inputs.len() < T);
         let offset = inputs.len() + 1;
 
-        (_, _, self.s[0]) = chip.inner_product(
-            ctx,
-            &[Constant(pre_constants[0])]
-                .into_iter()
-                .chain(inputs.iter().map(|a| Existing(a)))
-                .collect(),
-            &vec![Constant(F::one()); inputs.len() + 1],
-        )?;
-
-        for ((x, constant), input) in self
-            .s
-            .iter_mut()
-            .skip(1)
-            .zip(pre_constants.iter().skip(1))
-            .zip(inputs.iter())
-        {
-            *x = if *constant == F::zero() {
-                chip.add(ctx, &Existing(x), &Existing(input))?
-            } else {
-                chip.inner_product(
-                    ctx,
-                    &vec![Existing(x), Existing(input), Constant(*constant)],
-                    &vec![Constant(F::one()), Constant(F::one()), Constant(F::one())],
-                )?
-                .2
-            };
+        if let Some(s_0) = self.s.get_mut(offset) {
+            *s_0 = chip.add(ctx, &Existing(&s_0), &Constant(F::one()))?;
         }
 
-        for (i, (x, constant)) in self
-            .s
-            .iter_mut()
-            .skip(offset)
-            .zip(pre_constants.iter().skip(offset))
-            .enumerate()
-        {
-            *x = chip.add(
-                ctx,
-                &Existing(x),
-                &Constant(if i == 0 {
-                    *constant + F::one()
-                } else {
-                    *constant
-                }),
-            )?;
+        for (x, input) in self.s.iter_mut().skip(1).zip(inputs.iter()) {
+            *x = chip.add(ctx, &Existing(x), &Existing(input))?
+        }
+
+        for (i, (x, constant)) in self.s.iter_mut().zip(pre_constants.iter()).enumerate() {
+            *x = chip.add(ctx, &Existing(x), &Constant(*constant))?;
         }
 
         Ok(())
