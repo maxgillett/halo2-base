@@ -944,25 +944,6 @@ impl<F: FieldExt> GateInstructions<F> for FlexGateConfig<F> {
         Ok(product)
     }
 
-    fn pow_bits(
-        &self,
-        ctx: &mut Context<'_, F>,
-        base: F,
-        bits: &Vec<QuantumCell<F>>,
-    ) -> Result<AssignedValue<F>, Error> {
-        let mut product =
-            self.assign_region(ctx, vec![Constant(F::from(1))], vec![], None)?[0].clone();
-        for (i, bit) in bits.iter().enumerate() {
-            product = self.mul_add(
-                ctx,
-                &Existing(&product),
-                &bit,
-                &Constant(F::from(base.pow_vartime(&[1 << i]))),
-            )?;
-        }
-        Ok(product)
-    }
-
     fn invert(
         &self,
         ctx: &mut Context<'_, F>,

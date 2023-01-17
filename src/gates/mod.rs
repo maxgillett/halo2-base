@@ -211,13 +211,6 @@ pub trait GateInstructions<F: FieldExt> {
         b: usize,
     ) -> Result<AssignedValue<F>, Error>;
 
-    fn pow_bits(
-        &self,
-        ctx: &mut Context<'_, F>,
-        a: F,
-        b: &Vec<QuantumCell<F>>,
-    ) -> Result<AssignedValue<F>, Error>;
-
     fn invert(
         &self,
         ctx: &mut Context<'_, F>,
