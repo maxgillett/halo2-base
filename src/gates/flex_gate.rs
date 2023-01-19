@@ -937,8 +937,9 @@ impl<F: FieldExt> GateInstructions<F> for FlexGateConfig<F> {
         a: &QuantumCell<F>,
         b: usize,
     ) -> Result<AssignedValue<F>, Error> {
+        // FIXME: This doesn't check the case that b is zero (which should return 1)
         let mut product = self.assign_region(ctx, vec![a.clone()], vec![], None)?[0].clone();
-        for _ in 0..b {
+        for _ in 0..b - 1 {
             product = self.mul(ctx, &Existing(&product), &Existing(&product))?;
         }
         Ok(product)

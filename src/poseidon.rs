@@ -9,6 +9,7 @@ use halo2_proofs::{halo2curves::FieldExt, plonk::Error};
 // taken from https://github.com/scroll-tech/halo2-snark-aggregator/tree/main/halo2-snark-aggregator-api/src/hash
 use poseidon::{SparseMDSMatrix, Spec, State};
 
+#[derive(Clone)]
 struct PoseidonState<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize> {
     s: [AssignedValue<F>; T],
     _marker: PhantomData<A>,
@@ -120,6 +121,7 @@ impl<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize>
     }
 }
 
+#[derive(Clone)]
 pub struct PoseidonChip<F: FieldExt, A: GateInstructions<F>, const T: usize, const RATE: usize> {
     init_state: [AssignedValue<F>; T],
     state: PoseidonState<F, A, T, RATE>,
